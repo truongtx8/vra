@@ -1,13 +1,11 @@
-function Recognition005_Digits_kNN()
+function Recognition008_Digits_kNN()
     global counter_wrong;
     counter_wrong = 0;
     
     fprintf ('\nLoading train data...');
     imgTrainAll = loadMNISTImages('./train-images.idx3-ubyte');
     lblTrainAll = loadMNISTLabels('./train-labels.idx1-ubyte');
-    
-    Mdl = fitcknn(imgTrainAll', lblTrainAll);
-    
+        
     fprintf ('\nLoading test data...\n');
     imgTestAll = loadMNISTImages('./t10k-images.idx3-ubyte');
     lblTestAll = loadMNISTLabels('./t10k-labels.idx1-ubyte');
@@ -15,12 +13,24 @@ function Recognition005_Digits_kNN()
     nTrainImages = size(imgTrainAll, 2);
     nTestImages  = size(imgTestAll, 2);
     
-    for i = 1:nTestImages
-        nNumber = i;
-        ShowImgWithLabel(nNumber, imgTestAll, lblTestAll, 'Test', Mdl);
+    nBins = 256;
+    imgTrainAll_hist = zeros(nBins, nTrainImages);
+    
+    for i = 1:nTrainImages
+        imgTrainAll_hist(:,i) = imhist(imgTrainAll(:,i),nBins);
     end
     
-    fprintf ('\nTotal wrong recognition: %d\n', counter_wrong);
+    for i = 1:5000
+        imgTestAll_hist(:,i) = imhist(imgTestAll(:,i),nBins);
+    end
+    
+    Mdl = fitcknn(imgTrainAll_hist', lblTrainAll, 'NumNeighbors',3);
+    
+    lblResult = predict(Mdl, imgTestAll_hist');
+    nResult = (lblResult == lblTestAll(1:5000));
+    nCount = sum(nResult);
+    
+    fprintf ('\nTotal wrong recognition: %d\n', nCount);
 
 end
 
@@ -43,13 +53,6 @@ function ShowImgWithLabel(n, imgAll, lblAll, type, Mdl)
     else
         strResult = 'Wrong';
         fTitle = num2str(n);
-
-        %figure ('Name', fTitle, 'NumberTitle','off');
-        %img2D = reshape(img, 28, 28); %reshape
-        %imshow(img2D); % show image
-        
-        %title(strResult);
-        %xlabel(strLabelImage);
         
         counter_wrong = counter_wrong + 1;
         fprintf ('\nWrong recognition: %d\n', counter_wrong);
