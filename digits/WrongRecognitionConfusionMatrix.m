@@ -1,4 +1,4 @@
-function ResultMatrix = WrongRecognitionConfusionMatrix(n) 
+function ResultMatrix = WrongRecognitionConfusionMatrix() 
     ResultMatrix = zeros(10, 2);
 
     fprintf ('\nLoading train data...');
@@ -7,21 +7,12 @@ function ResultMatrix = WrongRecognitionConfusionMatrix(n)
     fprintf ('\nLoading test data...\n');
     [imgTestAll, lblTestAll] = loadData ('t10k-images.idx3-ubyte', 't10k-labels.idx1-ubyte');
     
-    nTestImages  = size(imgTestAll, 2);
+    %nTestImages  = size(imgTestAll, 2);
     
     Mdl = fitcknn(imgTrainAll', lblTrainAll);
-    %for n = 0:9
-        ResultMatrix (n + 1, 1) = n;
-        for i = 1:nTestImages
-            img   = imgTestAll(:, i);
-            lblImageTest   = lblTestAll(i);
-            lblPredictTest = predict(Mdl, img');
-
-            if (lblImageTest == n)
-                if (lblImageTest ~= lblPredictTest)
-                    ResultMatrix(n + 1, 2) = ResultMatrix(n + 1, 2) + 1;
-                end
-            end
-        end
-    %end
+    
+    fprintf ('\nRecognizing test images...\n');
+    lblPredictTest = predict(Mdl, imgTestAll');
+    
+    ResultMatrix = confusionmat(lblTestAll, lblPredictTest);
 end
